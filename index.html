@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Varro Ag — Built for AGCO Equipment Dealers</title>
+  <meta name="description" content="Varro Ag helps AGCO equipment dealers track every machine, manage every job, and submit every warranty claim on time. Stop losing money you already earned." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green-950: #052010;
+      --green-900: #0a3d1f;
+      --green-800: #0f5a2e;
+      --green-700: #157a3e;
+      --green-600: #1a9b50;
+      --green-500: #22c55e;
+      --green-400: #4ade80;
+      --green-100: #dcfce7;
+      --gold-600:  #b45309;
+      --gold-500:  #d97706;
+      --gold-400:  #f59e0b;
+      --gold-300:  #fbbf24;
+      --gold-200:  #fde68a;
+      --gold-100:  #fef3c7;
+      --slate-900: #0f172a;
+      --slate-800: #1e293b;
+      --slate-700: #334155;
+      --slate-600: #475569;
+      --slate-400: #94a3b8;
+      --slate-300: #cbd5e1;
+      --slate-200: #e2e8f0;
+      --slate-100: #f1f5f9;
+      --white: #ffffff;
+    }
+
+    html, body { height: 100%; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--slate-800);
+      background: var(--white);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Slide Container ──────────────────────────────────────────── */
+    #slides {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+      scroll-behavior: smooth;
+    }
+    #slides > section {
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* ── Slide Dot Nav ────────────────────────────────────────────── */
+    #slide-nav {
+      position: fixed;
+      right: 18px; top: 50%;
+      transform: translateY(-50%);
+      z-index: 500;
+      display: flex; flex-direction: column;
+      gap: 10px; align-items: center;
+      background: rgba(0,0,0,0.18);
+      border-radius: 18px;
+      padding: 10px 6px;
+      backdrop-filter: blur(6px);
+    }
+    .s-dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.65);
+      background: transparent; cursor: pointer;
+      transition: all 0.25s ease; padding: 0; position: relative;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.25);
+    }
+    .s-dot::before {
+      content: attr(data-label);
+      position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+      background: rgba(0,0,0,0.85); color: #fff;
+      font-size: 11px; font-weight: 600; white-space: nowrap;
+      padding: 3px 8px; border-radius: 4px;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .s-dot:hover::before { opacity: 1; }
+    .s-dot.active { background: var(--gold-400); border-color: var(--gold-400); transform: scale(1.5); box-shadow: 0 0 0 1px rgba(0,0,0,0.2); }
+    .s-dot:hover:not(.active) { border-color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.3); }
+    @media (max-width: 768px) { #slide-nav { display: none; } }
+
+    /* ── Utilities ────────────────────────────────────────────────── */
+    .container    { max-width: 1200px; margin: 0 auto; padding: 0 40px; }
+    .container-sm { max-width: 860px;  margin: 0 auto; padding: 0 40px; }
+    .serif { font-family: 'DM Serif Display', Georgia, serif; }
+
+    .section-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--green-700); margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: clamp(26px, 3.2vw, 40px);
+      line-height: 1.1; color: var(--slate-900);
+      margin-bottom: 12px; font-weight: 400;
+    }
+    .section-sub {
+      font-size: 16px; color: var(--slate-600);
+      max-width: 560px; line-height: 1.65;
+    }
+
+    /* ── Buttons ──────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 26px; border-radius: 8px; font-size: 14px;
+      font-weight: 700; text-decoration: none; cursor: pointer;
+      border: none; transition: all 0.2s ease; white-space: nowrap;
+    }
+    .btn-primary { background: var(--gold-400); color: var(--slate-900); }
+    .btn-primary:hover { background: var(--gold-300); transform: translateY(-1px); box-shadow: 0 8px 28px rgba(245,158,11,0.4); }
+    .btn-outline { background: transparent; color: var(--white); border: 1.5px solid rgba(255,255,255,0.3); }
+    .btn-outline:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.6); }
+    .btn-outline-dark { background: transparent; color: var(--slate-700); border: 1.5px solid var(--slate-300); }
+    .btn-outline-dark:hover { border-color: var(--slate-500); color: var(--slate-900); }
+
+    /* ── Nav ──────────────────────────────────────────────────────── */
+    #main-nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      padding: 0 40px;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    #main-nav.scrolled {
+      background: rgba(5, 32, 16, 0.96);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.07);
+    }
+    .nav-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 68px;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--white); }
+    .nav-logo-mark {
+      width: 34px; height: 34px; background: var(--gold-400); border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; font-weight: 900; color: var(--slate-900);
+    }
+    .nav-logo-text { font-size: 16px; font-weight: 700; }
+    .nav-links { display: flex; align-items: center; gap: 18px; }
+    .nav-links a { color: rgba(255,255,255,0.7); text-decoration: none; font-size: 12px; font-weight: 500; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--white); }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .nav-login { color: rgba(255,255,255,0.7); text-decoration: none; font-size: 13.5px; font-weight: 500; transition: color 0.2s; }
+    .nav-login:hover { color: var(--white); }
+    @media (max-width: 768px) { .nav-links { display: none; } }
+
+    /* ── Hero ─────────────────────────────────────────────────────── */
+    #hero {
+      background: linear-gradient(150deg, var(--green-950) 0%, #0a3520 45%, #061a0e 100%);
+      position: relative; overflow: hidden; padding-top: 68px;
+    }
+    #hero::before {
+      content: ''; position: absolute; inset: 0;
+      background-image:
+        radial-gradient(ellipse at 10% 80%, rgba(22,197,94,0.06) 0%, transparent 55%),
+        radial-gradient(ellipse at 90% 15%, rgba(245,158,11,0.05) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .hero-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 60px; align-items: center;
+      min-height: calc(100vh - 68px);
+      padding: 60px 0;
+    }
+    @media (max-width: 960px) { .hero-grid { grid-template-columns: 1fr; } }
+
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2);
+      border-radius: 20px; padding: 5px 12px; margin-bottom: 20px;
+    }
+    .hero-tag-dot { width: 6px; height: 6px; background: var(--gold-400); border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .hero-tag-text { color: var(--gold-400); font-size: 12px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; }
+
+    .hero-headline { font-size: clamp(36px, 4vw, 56px); line-height: 1.06; color: var(--white); margin-bottom: 20px; font-weight: 400; }
+    .hero-headline em { font-style: italic; color: var(--gold-300); }
+    .hero-sub { font-size: 16px; color: rgba(255,255,255,0.65); max-width: 480px; margin-bottom: 32px; line-height: 1.75; }
+    .hero-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 44px; }
+    .hero-divider { height: 1px; background: rgba(255,255,255,0.08); margin-bottom: 28px; }
+    .hero-steps { display: flex; gap: 0; }
+    .hero-step { flex: 1; padding-right: 24px; border-right: 1px solid rgba(255,255,255,0.08); margin-right: 24px; }
+    .hero-step:last-child { border-right: none; margin-right: 0; padding-right: 0; }
+    .hero-step-num { font-size: 10px; font-weight: 700; color: var(--gold-400); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+    .hero-step-label { font-size: 12.5px; font-weight: 600; color: rgba(255,255,255,0.6); line-height: 1.4; }
+
+    .hero-visual { position: relative; }
+    @media (max-width: 960px) { .hero-visual { display: none; } }
+
+    .app-mock {
+      background: var(--slate-900); border-radius: 14px; overflow: hidden;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.07);
+      transform: perspective(1000px) rotateY(-4deg) rotateX(2deg);
+    }
+    .app-mock-bar {
+      background: var(--slate-800); padding: 10px 16px;
+      display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .app-mock-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .app-mock-title { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.4); margin-left: 8px; }
+    .app-mock-body { padding: 20px; }
+    .app-mock-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 16px; }
+    .app-stat-tile { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 12px; }
+    .app-stat-tile .val { font-size: 20px; font-weight: 800; color: var(--white); line-height: 1; margin-bottom: 3px; }
+    .app-stat-tile .lbl { font-size: 10px; color: rgba(255,255,255,0.35); font-weight: 500; }
+    .app-stat-tile.green .val { color: var(--green-400); }
+    .app-stat-tile.gold .val  { color: var(--gold-400); }
+    .app-stat-tile.red .val   { color: #f87171; }
+    .app-table-row {
+      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 8px;
+      padding: 9px 12px; border-radius: 6px;
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
+      margin-bottom: 6px; align-items: center;
+    }
+    .app-table-row .machine { font-size: 12px; color: rgba(255,255,255,0.75); font-weight: 600; }
+    .app-table-row .meta    { font-size: 11px; color: rgba(255,255,255,0.35); }
+    .badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; text-align: center; }
+    .badge-green  { background: rgba(34,197,94,0.15); color: #4ade80; }
+    .badge-gold   { background: rgba(245,158,11,0.15); color: #fbbf24; }
+    .badge-red    { background: rgba(248,113,113,0.15); color: #f87171; }
+    .badge-blue   { background: rgba(96,165,250,0.15); color: #93c5fd; }
+
+    /* ── ROI ──────────────────────────────────────────────────────── */
+    #roi {
+      background: linear-gradient(160deg, #0d1a14 0%, var(--slate-900) 50%, #0a1520 100%);
+      position: relative;
+    }
+    #roi::before {
+      content: ''; position: absolute; inset: 0;
+      background-image: radial-gradient(ellipse at 85% 15%, rgba(245,158,11,0.04) 0%, transparent 55%);
+      pointer-events: none;
+    }
+    #roi .section-label { color: var(--gold-400); }
+    #roi .section-title { color: var(--white); }
+
+    .roi-opening {
+      background: rgba(245,158,11,0.06);
+      border: 1px solid rgba(245,158,11,0.15);
+      border-radius: 12px; padding: 18px 24px; margin-bottom: 22px;
+    }
+    .roi-opening h3 {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 20px; color: var(--white); margin-bottom: 8px;
+    }
+    .roi-opening p { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.7; }
+
+    .roi-fleet-math {
+      margin-top: 14px; padding: 14px 20px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.65;
+    }
+    .roi-fleet-math strong { color: var(--gold-300); }
+    .roi-math-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gold-400); margin-right: 8px; }
+
+    .roi-stats-row {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 1px; background: rgba(255,255,255,0.07);
+      border-radius: 14px; overflow: hidden; border: 1px solid rgba(255,255,255,0.07);
+    }
+    @media (max-width: 700px) { .roi-stats-row { grid-template-columns: 1fr; } }
+    .roi-stat { padding: 20px 24px; background: rgba(255,255,255,0.03); }
+    .roi-stat .big { font-size: 30px; font-weight: 800; color: var(--gold-400); line-height: 1; margin-bottom: 7px; }
+    .roi-stat h3   { font-size: 11px; font-weight: 700; color: var(--white); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+    .roi-stat p    { font-size: 12.5px; color: rgba(255,255,255,0.4); line-height: 1.6; }
+
+    /* ── Process ──────────────────────────────────────────────────── */
+    #process { background: var(--slate-100); }
+    .process-intro { text-align: center; margin-bottom: 20px; }
+    .process-intro .section-sub { margin: 0 auto; font-size: 14px; }
+    .process-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+    @media (max-width: 768px) { .process-grid { grid-template-columns: 1fr; } }
+    .process-card {
+      border-radius: 14px; overflow: hidden;
+      border: 1px solid var(--slate-200); background: var(--white);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .process-card:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(0,0,0,0.08); }
+    .process-card-head { padding: 12px 18px 10px; background: var(--green-900); }
+    .process-step-tag { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold-400); margin-bottom: 4px; }
+    .process-card-head h3 { font-size: 14px; font-weight: 700; color: var(--white); line-height: 1.2; }
+    .process-card-head p  { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 3px; line-height: 1.4; }
+    .process-card-body { padding: 12px 18px; }
+    .process-card-body ul { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+    .process-card-body ul li { font-size: 12px; color: var(--slate-700); display: flex; align-items: flex-start; gap: 8px; line-height: 1.45; }
+    .process-card-body ul li::before { content: '✓'; color: var(--green-700); font-weight: 800; flex-shrink: 0; padding-top: 1px; }
+    .process-owner {
+      margin-top: 8px; padding-top: 7px;
+      border-top: 1px solid var(--slate-200);
+      font-size: 11px; font-weight: 700; color: var(--slate-400);
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .process-owner span { color: var(--green-700); }
+    .process-mgmt {
+      margin-top: 12px; padding: 10px 18px;
+      background: var(--green-900); border-radius: 10px;
+      text-align: center; font-size: 13px;
+      color: rgba(255,255,255,0.65); line-height: 1.6;
+    }
+    .process-mgmt strong { color: var(--white); }
+
+    /* ── Your Voice ───────────────────────────────────────────────── */
+    #your-voice { background: var(--white); }
+    .voice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 52px; align-items: start; margin-top: 32px; }
+    @media (max-width: 768px) { .voice-grid { grid-template-columns: 1fr; gap: 28px; } }
+    .voice-copy p { font-size: 15px; color: var(--slate-600); line-height: 1.8; margin-bottom: 14px; }
+    .voice-copy p:last-child { margin-bottom: 0; }
+    .voice-copy strong { color: var(--slate-900); }
+    .voice-items { display: flex; flex-direction: column; gap: 11px; }
+    .voice-item {
+      display: flex; align-items: flex-start; gap: 13px;
+      padding: 15px 17px; border-radius: 12px;
+      background: var(--slate-100); border: 1px solid var(--slate-200);
+    }
+    .vi-icon { font-size: 18px; flex-shrink: 0; padding-top: 2px; }
+    .voice-item h4 { font-size: 13.5px; font-weight: 700; color: var(--slate-900); margin-bottom: 2px; }
+    .voice-item p  { font-size: 12.5px; color: var(--slate-600); line-height: 1.5; margin: 0; }
+    .voice-tag { display: inline-block; font-size: 10px; font-weight: 700; color: var(--gold-600); background: var(--gold-100); padding: 2px 7px; border-radius: 8px; margin-left: 6px; vertical-align: middle; }
+
+    /* ── Roles ────────────────────────────────────────────────────── */
+    #workflow {
+      background: linear-gradient(160deg, var(--green-950) 0%, #071e0e 100%);
+      padding: 80px 0;
+    }
+    #workflow .section-label { color: var(--gold-400); }
+    #workflow .section-title { color: var(--white); }
+    #workflow .section-sub   { color: rgba(255,255,255,0.5); }
+    .roles-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 16px; }
+    @media (max-width: 860px) { .roles-grid { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 500px) { .roles-grid { grid-template-columns: 1fr; } }
+    .role-card {
+      padding: 11px; border-radius: 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .role-icon { font-size: 16px; margin-bottom: 4px; }
+    .role-card h3 { font-size: 13px; font-weight: 700; color: var(--white); margin-bottom: 2px; }
+    .role-step-tag { font-size: 10px; font-weight: 600; color: var(--gold-400); letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 4px; display: block; }
+    .role-card ul { list-style: none; padding: 0; }
+    .role-card ul li { font-size: 12px; color: rgba(255,255,255,0.5); padding: 2px 0; line-height: 1.4; }
+    .role-card ul li::before { content: '→ '; color: var(--gold-400); font-weight: 700; }
+
+    /* ── Roadmap ──────────────────────────────────────────────────── */
+    #roadmap { background: var(--slate-100); }
+    .rm-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 16px; }
+    @media (max-width: 768px) { .rm-grid { grid-template-columns: 1fr; } }
+    .rm-col { border-radius: 12px; overflow: hidden; border: 1px solid var(--slate-200); }
+    .rm-head { padding: 8px 14px; font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; }
+    .rm-head.live   { background: var(--green-900); color: var(--green-400); }
+    .rm-head.coming { background: var(--slate-800); color: var(--gold-400); }
+    .rm-head.future { background: var(--slate-200); color: var(--slate-500); border-bottom: 1px solid var(--slate-300); }
+    .rm-items { padding: 8px 12px; display: flex; flex-direction: column; gap: 5px; background: var(--white); }
+    .rm-item { display: flex; align-items: flex-start; gap: 7px; }
+    .rm-dot {
+      width: 15px; height: 15px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px; flex-shrink: 0; margin-top: 2px;
+    }
+    .rm-dot.check { background: var(--green-100); color: var(--green-700); }
+    .rm-dot.clock { background: var(--gold-100); color: var(--gold-600); }
+    .rm-dot.ring  { background: var(--slate-200); color: var(--slate-500); }
+    .rm-text strong { font-size: 11.5px; color: var(--slate-900); font-weight: 600; display: block; line-height: 1.25; }
+    .rm-text span   { font-size: 10px; color: var(--slate-500); line-height: 1.35; }
+    .rm-note { margin-top: 10px; text-align: center; font-size: 12px; color: var(--slate-500); line-height: 1.5; }
+    .rm-note em { color: var(--slate-700); font-style: normal; font-weight: 600; }
+
+    /* ── Pricing ──────────────────────────────────────────────────── */
+    #pricing { background: var(--white); }
+    .billing-toggle { display: flex; align-items: center; gap: 12px; margin-top: 10px; margin-bottom: 10px; }
+    .t-label { font-size: 13px; font-weight: 600; color: var(--slate-500); }
+    .t-label.active { color: var(--slate-900); }
+    .t-switch {
+      width: 40px; height: 22px; border-radius: 11px;
+      background: var(--green-700); cursor: pointer;
+      position: relative; border: none; padding: 0; transition: background 0.2s;
+    }
+    .t-switch::after {
+      content: ''; position: absolute; left: 3px; top: 3px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: white; transition: transform 0.2s;
+    }
+    .t-switch.annual::after  { transform: translateX(18px); }
+    .t-switch.monthly::after { transform: translateX(0); }
+    .save-pill { background: var(--green-100); color: var(--green-700); font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 12px; }
+    .pricing-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+    @media (max-width: 860px) { .pricing-grid { grid-template-columns: 1fr; max-width: 400px; } }
+    .p-card {
+      border-radius: 16px; overflow: hidden;
+      border: 1px solid var(--slate-200); background: var(--slate-100);
+      display: flex; flex-direction: column;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .p-card:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(0,0,0,0.09); }
+    .p-card.pop { border-color: var(--green-700); box-shadow: 0 0 0 2px var(--green-700); }
+    .p-head { padding: 12px 16px 8px; }
+    .pop-tag { display: inline-block; background: var(--green-900); color: var(--green-400); font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 9px; border-radius: 20px; margin-bottom: 4px; }
+    .p-tier { font-size: 12px; font-weight: 700; color: var(--slate-600); margin-bottom: 2px; }
+    .p-price { display: flex; align-items: flex-end; gap: 3px; margin-bottom: 2px; }
+    .p-amount { font-size: 28px; font-weight: 800; color: var(--slate-900); line-height: 1; }
+    .p-period { font-size: 12px; color: var(--slate-500); padding-bottom: 4px; }
+    .p-billed { font-size: 11px; color: var(--slate-500); margin-bottom: 5px; }
+    .p-desc   { font-size: 11.5px; color: var(--slate-600); line-height: 1.5; }
+    .p-divider { height: 1px; background: var(--slate-200); margin: 0 16px; }
+    .p-features { padding: 8px 16px; flex: 1; }
+    .p-features li { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--slate-700); padding: 2px 0; list-style: none; }
+    .p-features li::before { content: '✓'; color: var(--green-700); font-weight: 800; flex-shrink: 0; padding-top: 1px; }
+    .p-features li.off { color: var(--slate-400); }
+    .p-features li.off::before { content: '–'; color: var(--slate-300); }
+    .p-cta { padding: 8px 16px; }
+    .p-cta a { display: block; text-align: center; padding: 8px; border-radius: 8px; font-size: 13px; font-weight: 700; text-decoration: none; transition: all 0.2s; }
+    .p-cta a.primary { background: var(--green-700); color: var(--white); }
+    .p-cta a.primary:hover { background: var(--green-600); }
+    .p-cta a.secondary { background: transparent; color: var(--slate-700); border: 1.5px solid var(--slate-300); }
+    .p-cta a.secondary:hover { border-color: var(--slate-500); color: var(--slate-900); }
+    .pricing-note { margin-top: 10px; text-align: center; font-size: 12px; color: var(--slate-500); line-height: 1.6; }
+    .pricing-note a { color: var(--green-700); text-decoration: underline; text-underline-offset: 3px; }
+
+    /* ── Origin / Final Slide ─────────────────────────────────────── */
+    #origin {
+      background: linear-gradient(160deg, var(--green-950) 0%, #071e0e 100%);
+      position: relative;
+    }
+    #origin::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 30% 50%, rgba(34,197,94,0.05) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    #origin .section-label { color: var(--gold-400); }
+    .origin-inner { position: relative; z-index: 1; }
+    .origin-headline { font-size: clamp(22px, 2.8vw, 34px); color: var(--white); font-weight: 400; line-height: 1.1; margin-bottom: 4px; }
+    .origin-headline em { font-style: italic; color: var(--gold-300); }
+
+    .origin-story {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 14px 22px; margin: 12px 0 10px;
+    }
+    .origin-story p { font-size: 12.5px; color: rgba(255,255,255,0.6); line-height: 1.6; margin-bottom: 6px; }
+    .origin-story p:last-child { margin-bottom: 0; }
+
+    .origin-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    @media (max-width: 600px) { .origin-cards { grid-template-columns: 1fr; } }
+    .origin-card {
+      padding: 10px 14px; border-radius: 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .origin-card-icon { font-size: 16px; margin-bottom: 3px; }
+    .origin-card h3 { font-size: 13px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+    .origin-card p { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.65; }
+
+    .origin-cta { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .origin-fine { font-size: 12px; color: rgba(255,255,255,0.3); }
+
+    /* ── Footer ───────────────────────────────────────────────────── */
+    footer { border-top: 1px solid rgba(255,255,255,0.06); padding: 14px 40px; margin-top: 20px; }
+    .footer-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+    .footer-brand { display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.35); font-size: 13px; }
+    .footer-mark { width: 22px; height: 22px; background: var(--gold-400); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; color: var(--slate-900); }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a { color: rgba(255,255,255,0.3); text-decoration: none; font-size: 13px; transition: color 0.2s; }
+    .footer-links a:hover { color: rgba(255,255,255,0.6); }
+
+    /* ── Fade-up ──────────────────────────────────────────────────── */
+    .fade-up { opacity: 0; transform: translateY(18px); transition: opacity 0.55s ease, transform 0.55s ease; }
+    .fade-up.visible { opacity: 1; transform: none; }
+  </style>
+</head>
+<body>
+
+  <nav id="main-nav">
+    <div class="nav-inner">
+      <a class="nav-logo" href="#">
+        <div class="nav-logo-mark">V</div>
+        <span class="nav-logo-text">Varro Ag</span>
+      </a>
+      <div class="nav-links">
+        <a href="#" onclick="goTo('roi');return false;">The Real Cost</a>
+        <a href="#" onclick="goTo('process');return false;">How It Works</a>
+        <a href="#" onclick="goTo('your-voice');return false;">Your Voice</a>
+        <a href="#" onclick="goTo('roadmap');return false;">Where We're Going</a>
+        <a href="#" onclick="goTo('workflow');return false;">Built for Your Team</a>
+        <a href="#" onclick="goTo('pricing');return false;">Fair Price. Clear Value.</a>
+        <a href="#" onclick="goTo('origin');return false;">Why We Built Varro</a>
+      </div>
+      <div class="nav-right">
+        <a class="nav-login" href="/app">Log In</a>
+        <a class="btn btn-primary" href="/app">See a Demo</a>
+      </div>
+    </div>
+  </nav>
+
+  <nav id="slide-nav" aria-label="Section navigation"></nav>
+
+  <div id="slides">
+
+    <!-- ══ 1. HERO ══════════════════════════════════════════════════ -->
+    <section id="hero" data-label="Home">
+      <div class="container">
+        <div class="hero-grid">
+          <div>
+            <div class="hero-tag">
+              <div class="hero-tag-dot"></div>
+              <span class="hero-tag-text">Built for AGCO Equipment Dealers</span>
+            </div>
+            <h1 class="hero-headline serif">
+              You did the work.<br>
+              <em>Make sure you<br>get paid for it.</em>
+            </h1>
+            <p class="hero-sub">
+              Varro Ag is a three-step system for ag equipment dealers — track every machine, manage every job, and submit every warranty claim before the deadline. Nothing falls through the cracks.
+            </p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="/app">See a Demo →</a>
+              <a class="btn btn-outline" href="#" onclick="goTo('pricing');return false;">View Pricing</a>
+            </div>
+            <div class="hero-divider"></div>
+            <div class="hero-steps">
+              <div class="hero-step">
+                <div class="hero-step-num">Step 1</div>
+                <div class="hero-step-label">Track machines &amp; open jobs</div>
+              </div>
+              <div class="hero-step">
+                <div class="hero-step-num">Step 2</div>
+                <div class="hero-step-label">Dispatch &amp; complete jobs</div>
+              </div>
+              <div class="hero-step">
+                <div class="hero-step-num">Step 3</div>
+                <div class="hero-step-label">Submit warranty &amp; get paid</div>
+              </div>
+            </div>
+          </div>
+          <div class="hero-visual">
+            <div class="app-mock">
+              <div class="app-mock-bar">
+                <div class="app-mock-dot" style="background:#f87171"></div>
+                <div class="app-mock-dot" style="background:#fbbf24"></div>
+                <div class="app-mock-dot" style="background:#4ade80"></div>
+                <span class="app-mock-title">Varro Ag — Fleet Dashboard</span>
+              </div>
+              <div class="app-mock-body">
+                <div class="app-mock-stats">
+                  <div class="app-stat-tile"><div class="val">142</div><div class="lbl">Total Machines</div></div>
+                  <div class="app-stat-tile green"><div class="val">108</div><div class="lbl">Warranty Active</div></div>
+                  <div class="app-stat-tile gold"><div class="val">12</div><div class="lbl">Expiring Soon</div></div>
+                  <div class="app-stat-tile red"><div class="val">7</div><div class="lbl">Service Overdue</div></div>
+                </div>
+                <div class="app-table-row">
+                  <span class="machine">2023 Fendt 728 Vario</span>
+                  <span class="meta">VIN: FE23728001</span>
+                  <span class="badge badge-gold">Expiring</span>
+                  <span class="badge badge-blue">247 hrs</span>
+                </div>
+                <div class="app-table-row">
+                  <span class="machine">2022 Massey 8S.305</span>
+                  <span class="meta">VIN: MF22305014</span>
+                  <span class="badge badge-green">Active</span>
+                  <span class="badge badge-blue">189 hrs</span>
+                </div>
+                <div class="app-table-row">
+                  <span class="machine">2021 Challenger MT765</span>
+                  <span class="meta">VIN: CH21765008</span>
+                  <span class="badge badge-red">Overdue</span>
+                  <span class="badge badge-blue">312 hrs</span>
+                </div>
+                <div class="app-table-row">
+                  <span class="machine">2023 Fendt 311 Vario</span>
+                  <span class="meta">VIN: FE23311022</span>
+                  <span class="badge badge-green">Active</span>
+                  <span class="badge badge-blue">94 hrs</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 2. ROI ════════════════════════════════════════════════════ -->
+    <section id="roi" data-label="Why It Pays">
+      <div class="container">
+        <div class="fade-up">
+          <p class="section-label">The Real Cost</p>
+          <div class="roi-opening">
+            <h3>In ag, a clogged nozzle doesn't miss just one plant — it misses the whole pass before anyone notices.</h3>
+            <p>Your service department works the same way. A job not opened before the warranty clock runs out. A claim sitting a week past the submission window. A machine 50 hours past its service interval with nobody alerted. Small, quiet losses running through every planting and harvest season — and most dealers never see exactly where it's going.</p>
+          </div>
+        </div>
+        <div class="roi-stats-row fade-up">
+          <div class="roi-stat">
+            <div class="big">20 hrs</div>
+            <h3>Combine Inspection — Pure Labor</h3>
+            <p>No parts. Just 20 flat-rate hours of your technician's time — the kind of work that helps keep staff busy, especially during the slow season. Miss the submission and that labor cost is yours. But the bigger win: a completed inspection finds warranty-covered problems before the clock runs out, opening the door to even more covered repairs at standard service rates.</p>
+          </div>
+          <div class="roi-stat">
+            <div class="big">$1,350<span style="font-size:22px;font-weight:600">+</span></div>
+            <h3>The Cost of a Missed Service Claim</h3>
+            <p>A standard service runs 6–9 hours of shop time — $1,350+ in labor alone, before parts. The work is done. The parts are in. If the claim never makes it out the door, that reimbursement is gone.</p>
+          </div>
+          <div class="roi-stat">
+            <div class="big">2–3 jobs</div>
+            <h3>Stop 2–3 Leaks. Varro Pays for Itself.</h3>
+            <p>Recovering just a handful of missed service submissions annually covers the full cost of the software. That's before counting combine inspections, rogator services, or planter work.</p>
+          </div>
+        </div>
+        <div class="roi-fleet-math fade-up">
+          <span class="roi-math-label">The fleet math:</span>
+          A 150-machine dealership averaging 2 service events per year = <strong>300 jobs annually.</strong> At a 3% miss rate, that's 9 jobs. At $1,350+ per job in labor and parts at standard service rates — <strong>that's $12,000+ walking out the door.</strong> And that doesn't count the warranty repairs an inspection would have caught while coverage was still active.
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 3. PROCESS ════════════════════════════════════════════════ -->
+    <section id="process" data-label="How It Works">
+      <div class="container">
+        <div class="process-intro fade-up">
+          <p class="section-label">How Varro Works</p>
+          <h2 class="section-title serif">Three main steps.<br><em>One system.</em><br>Nothing left behind.</h2>
+          <p class="section-sub">Every feature in Varro is built around one goal — making sure nothing slips between the cracks of your service department.</p>
+        </div>
+        <div class="process-grid fade-up">
+          <div class="process-card">
+            <div class="process-card-head">
+              <div class="process-step-tag">Step 1 — Track</div>
+              <h3>Machine Management &amp; Job Opening</h3>
+              <p>Know what you have, where it stands, and what needs to happen next.</p>
+            </div>
+            <div class="process-card-body">
+              <ul>
+                <li>Add and manage your equipment fleet</li>
+                <li>Track machine hours and warranty status</li>
+                <li>Hourly, annual, and inspection maintenance pages</li>
+                <li>Open jobs and assign them into the workflow</li>
+                <li>Alerts when machines approach service intervals</li>
+                <li>Full service history per machine</li>
+              </ul>
+              <div class="process-owner">Owned by: <span>Service Manager</span></div>
+            </div>
+          </div>
+          <div class="process-card">
+            <div class="process-card-head">
+              <div class="process-step-tag">Step 2 — Dispatch</div>
+              <h3>Job Tracker &amp; Technician Coordination</h3>
+              <p>Make sure every open job gets done — and nothing stalls in the queue.</p>
+            </div>
+            <div class="process-card-body">
+              <ul>
+                <li>Job Tracker view for all active work orders</li>
+                <li>Assign and reassign technicians to jobs</li>
+                <li>Track job progress from open to complete</li>
+                <li>Technician portal — assigned machines &amp; jobs</li>
+                <li>Visibility into workload across the team</li>
+                <li>No job falls through without a record</li>
+              </ul>
+              <div class="process-owner">Owned by: <span>Service Coordinator</span></div>
+            </div>
+          </div>
+          <div class="process-card">
+            <div class="process-card-head">
+              <div class="process-step-tag">Step 3 — Submit</div>
+              <h3>Warranty Submission &amp; Reimbursement</h3>
+              <p>Get paid for the work your team already did — before the deadline.</p>
+            </div>
+            <div class="process-card-body">
+              <ul>
+                <li>Warranty submission tracking per job</li>
+                <li>Flag jobs approaching submission deadlines</li>
+                <li>Document everything needed before submitting</li>
+                <li>Reduce denied claims with complete records</li>
+                <li>Audit trail for every submission</li>
+                <li>Stop eating costs that should be reimbursed</li>
+              </ul>
+              <div class="process-owner">Owned by: <span>Warranty Clerk</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="process-mgmt fade-up">
+          <strong>Plus, management gets the full picture at a glance.</strong> The <strong>Fleet Dashboard</strong> shows machine health, warranty status, and service alerts across your entire operation. The <strong>FSM page</strong> gives leadership direct oversight of field service activity — no spreadsheets required.
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 4. YOUR VOICE ══════════════════════════════════════════════ -->
+    <section id="your-voice" data-label="Your Voice">
+      <div class="container">
+        <div class="fade-up">
+          <p class="section-label">Your Voice. Your Product.</p>
+          <h2 class="section-title serif">You have a voice in<br><em>what gets built next.</em></h2>
+        </div>
+        <div class="voice-grid fade-up">
+          <div class="voice-copy">
+            <p>Varro is built to change based on what dealers actually need — not what we guess they need. <strong>We build what dealers need, not what we assume they need.</strong> We add features we believe will help, but if something doesn't work for your shop, you can remove it from your view.</p>
+            <p>When you submit feedback, it's visible to <strong>every dealership using Varro</strong> — not just your own team. You'll see what other dealers are asking for, give your opinion, and vote on the features that would help your shop most.</p>
+            <p><strong>We value your feedback — no matter how small.</strong> The dealers using Varro today are shaping the product for every dealer who comes after them.</p>
+          </div>
+          <div class="voice-items">
+            <div class="voice-item">
+              <div class="vi-icon">📣</div>
+              <div>
+                <h4>In-App Feedback Board</h4>
+                <p>Submit ideas and flag issues directly from within Varro. No separate portal, no ticket maze.</p>
+              </div>
+            </div>
+            <div class="voice-item">
+              <div class="vi-icon">👁️</div>
+              <div>
+                <h4>Visible Across All Dealerships</h4>
+                <p>Feedback is shared across the platform — every dealer sees what others are asking for, along with our response and where it stands.</p>
+              </div>
+            </div>
+            <div class="voice-item">
+              <div class="vi-icon">🗳️</div>
+              <div>
+                <h4>Vote on What Matters Most <span class="voice-tag">Coming Soon</span></h4>
+                <p>See requests from other dealers and upvote what would help your shop. High-vote items get prioritized.</p>
+              </div>
+            </div>
+            <div class="voice-item">
+              <div class="vi-icon">💬</div>
+              <div>
+                <h4>Direct Access to the Team</h4>
+                <p>Small team, real accountability. Your feedback is read by the people actually building the product.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 5. ROADMAP (was 6) ════════════════════════════════════════ -->
+    <section id="roadmap" data-label="Roadmap">
+      <div class="container">
+        <div class="fade-up">
+          <p class="section-label">Where We're Going</p>
+          <h2 class="section-title serif">Fully functional today.<br><em>Getting better every week.</em></h2>
+          <p class="section-sub">An honest look at what's live, what's being built, and what's on the horizon.</p>
+        </div>
+        <div class="rm-grid fade-up">
+          <div class="rm-col">
+            <div class="rm-head live">✓ Live &amp; Functional</div>
+            <div class="rm-items">
+              <div class="rm-item"><div class="rm-dot check">✓</div><div class="rm-text"><strong>Fleet Dashboard</strong><span>Equipment health, warranty status, and service alerts at a glance</span></div></div>
+              <div class="rm-item"><div class="rm-dot check">✓</div><div class="rm-text"><strong>Maintenance Pages</strong><span>Hourly, annual, and inspection tracking with overdue alerts</span></div></div>
+              <div class="rm-item"><div class="rm-dot check">✓</div><div class="rm-text"><strong>Machine Management (Step 1)</strong><span>Add machines, track hours, manage warranty and service history</span></div></div>
+              <div class="rm-item"><div class="rm-dot check">✓</div><div class="rm-text"><strong>Job Tracker (Step 2)</strong><span>Dispatch, assign technicians, and track jobs to completion</span></div></div>
+              <div class="rm-item"><div class="rm-dot check">✓</div><div class="rm-text"><strong>Warranty Submission (Step 3)</strong><span>Track and submit warranty claims before the deadline</span></div></div>
+              <div class="rm-item"><div class="rm-dot check">✓</div><div class="rm-text"><strong>Technician Portal</strong><span>Assigned machines and active job view for field technicians</span></div></div>
+            </div>
+          </div>
+          <div class="rm-col">
+            <div class="rm-head coming">⏳ In Development</div>
+            <div class="rm-items">
+              <div class="rm-item"><div class="rm-dot clock">⏳</div><div class="rm-text"><strong>Customer Portal</strong><span>Customers view warranty status, service history, and message your team</span></div></div>
+              <div class="rm-item"><div class="rm-dot clock">⏳</div><div class="rm-text"><strong>Service Request Threads</strong><span>Customer-to-dealer threads stored per job</span></div></div>
+              <div class="rm-item"><div class="rm-dot clock">⏳</div><div class="rm-text"><strong>Feedback Voting</strong><span>Dealers vote on what features matter most</span></div></div>
+              <div class="rm-item"><div class="rm-dot clock">⏳</div><div class="rm-text"><strong>In-App Notifications</strong><span>Real-time alerts for deadlines and job updates</span></div></div>
+            </div>
+          </div>
+          <div class="rm-col">
+            <div class="rm-head future">◎ On the Horizon</div>
+            <div class="rm-items">
+              <div class="rm-item"><div class="rm-dot ring">◎</div><div class="rm-text"><strong>AGCO Manufacturer API</strong><span>Direct warranty submission and hour sync — a real goal, not a checkbox</span></div></div>
+              <div class="rm-item"><div class="rm-dot ring">◎</div><div class="rm-text"><strong>Multi-Manufacturer Support</strong><span>Built for AGCO today — open to expanding if demand exists</span></div></div>
+              <div class="rm-item"><div class="rm-dot ring">◎</div><div class="rm-text"><strong>Email Notifications</strong><span>Deadline alerts and updates delivered outside the app</span></div></div>
+              <div class="rm-item"><div class="rm-dot ring">◎</div><div class="rm-text"><strong>Technician Job Requests</strong><span>Techs flag issues and request work orders from their portal</span></div></div>
+            </div>
+          </div>
+        </div>
+        <p class="rm-note fade-up">We value your feedback — no matter how small. <em>What you tell us shapes what gets built next.</em></p>
+      </div>
+    </section>
+
+    <!-- ══ 6. ROLES (was 5) ══════════════════════════════════════════ -->
+    <section id="workflow" data-label="Who It's For">
+      <div class="container">
+        <div class="fade-up">
+          <p class="section-label">Built for Your Whole Team</p>
+          <h2 class="section-title serif" style="color:var(--white);">Every role in your<br>service department<br><em style="color:var(--gold-300);">has a view that fits.</em></h2>
+          <p class="section-sub">Each person sees exactly what they need for their step — nothing more, nothing less.</p>
+        </div>
+        <div class="roles-grid fade-up">
+          <div class="role-card">
+            <div class="role-icon">👤</div>
+            <h3>Account Admin</h3>
+            <span class="role-step-tag">Full Access</span>
+            <ul>
+              <li>Full dealership overview</li>
+              <li>User management</li>
+              <li>All steps and reports</li>
+              <li>Create customer accounts</li>
+            </ul>
+          </div>
+          <div class="role-card">
+            <div class="role-icon">🔑</div>
+            <h3>Service Manager</h3>
+            <span class="role-step-tag">Step 1 — Track</span>
+            <ul>
+              <li>Equipment management</li>
+              <li>Maintenance pages</li>
+              <li>Opens jobs into workflow</li>
+              <li>Manages service requests</li>
+            </ul>
+          </div>
+          <div class="role-card">
+            <div class="role-icon">📋</div>
+            <h3>Service Coordinator</h3>
+            <span class="role-step-tag">Step 2 — Dispatch</span>
+            <ul>
+              <li>Job Tracker</li>
+              <li>Assign &amp; reassign technicians</li>
+              <li>Track job completion</li>
+              <li>Workload visibility</li>
+            </ul>
+          </div>
+          <div class="role-card">
+            <div class="role-icon">📄</div>
+            <h3>Warranty Clerk</h3>
+            <span class="role-step-tag">Step 3 — Submit</span>
+            <ul>
+              <li>Warranty submission page</li>
+              <li>Deadline tracking</li>
+              <li>Documentation review</li>
+              <li>Reimbursement tracking</li>
+            </ul>
+          </div>
+          <div class="role-card">
+            <div class="role-icon">🔧</div>
+            <h3>Technician</h3>
+            <span class="role-step-tag">Field View</span>
+            <ul>
+              <li>My assigned machines</li>
+              <li>Active job list</li>
+              <li>Service due alerts</li>
+              <li>Simple, focused view</li>
+            </ul>
+          </div>
+          <div class="role-card">
+            <div class="role-icon">🚜</div>
+            <h3>Customer Portal</h3>
+            <span class="role-step-tag">Coming Soon</span>
+            <ul>
+              <li>Equipment warranty status</li>
+              <li>Service history access</li>
+              <li>Service request threads</li>
+              <li>Real-time job updates</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 7. PRICING ════════════════════════════════════════════════ -->
+    <section id="pricing" data-label="Pricing">
+      <div class="container">
+        <div class="fade-up">
+          <p class="section-label">Simple, Transparent Pricing</p>
+          <h2 class="section-title serif">Fair price. <em>Clear value.</em> No surprises.</h2>
+          <p class="section-sub">No sales call required to find out what it costs. Pick the plan that fits your dealership.</p>
+        </div>
+        <div class="billing-toggle fade-up">
+          <span class="t-label active" id="lbl-annual">Annual</span>
+          <button class="t-switch annual" id="billing-toggle" aria-label="Toggle billing period"></button>
+          <span class="t-label" id="lbl-monthly">Monthly</span>
+          <span class="save-pill">Save ~20%</span>
+        </div>
+        <div class="pricing-grid fade-up">
+          <div class="p-card">
+            <div class="p-head">
+              <div class="p-tier">Independent</div>
+              <div class="p-price"><span class="p-amount" id="p-s">$200</span><span class="p-period">/mo</span></div>
+              <div class="p-billed" id="b-s">Billed annually ($2,400/yr)</div>
+              <p class="p-desc">For independent dealers and single-location shops.</p>
+            </div>
+            <div class="p-divider"></div>
+            <ul class="p-features">
+              <li>Up to 75 machines</li>
+              <li>All 3 steps (Track, Dispatch, Submit)</li>
+              <li>Service interval alerts &amp; maintenance pages</li>
+              <li>Fleet dashboard &amp; basic reporting</li>
+              <li>Up to 5 users · Email support</li>
+              <li class="off">Multiple locations</li>
+              <li class="off">Advanced reporting · API access</li>
+            </ul>
+            <div class="p-cta"><a href="/app" class="secondary">Get Started</a></div>
+          </div>
+          <div class="p-card pop">
+            <div class="p-head">
+              <div class="pop-tag">Most Popular</div>
+              <div class="p-tier">Professional</div>
+              <div class="p-price"><span class="p-amount" id="p-p">$350</span><span class="p-period">/mo</span></div>
+              <div class="p-billed" id="b-p">Billed annually ($4,200/yr)</div>
+              <p class="p-desc">Full features for your whole team across up to 3 locations.</p>
+            </div>
+            <div class="p-divider"></div>
+            <ul class="p-features">
+              <li>Up to 300 machines</li>
+              <li>Everything in Starter</li>
+              <li>Up to 3 locations · Unlimited users</li>
+              <li>Technician portal</li>
+              <li>Advanced reporting &amp; data export</li>
+              <li>Customer portal (when live)</li>
+              <li>Priority support (phone + email)</li>
+            </ul>
+            <div class="p-cta"><a href="/app" class="primary">Get Started</a></div>
+          </div>
+          <div class="p-card">
+            <div class="p-head">
+              <div class="p-tier">Multi-Location</div>
+              <div class="p-price"><span class="p-amount" id="p-e" style="font-size:20px;padding-bottom:4px;">Contact Us</span></div>
+              <div class="p-billed" id="b-e">Custom pricing · Let's talk</div>
+              <p class="p-desc">For large dealer groups across multiple locations or states.</p>
+            </div>
+            <div class="p-divider"></div>
+            <ul class="p-features">
+              <li>Unlimited machines &amp; locations</li>
+              <li>Everything in Professional</li>
+              <li>API access &amp; SSO</li>
+              <li>Dedicated account manager</li>
+              <li>Custom onboarding &amp; training</li>
+              <li>SLA guarantee &amp; audit logs</li>
+              <li>Early feature access</li>
+            </ul>
+            <div class="p-cta"><a href="mailto:hello@varroag.com" class="secondary">Contact Us</a></div>
+          </div>
+        </div>
+        <div class="pricing-note fade-up">
+          Not sure which plan fits? <a href="mailto:hello@varroag.com">Email us</a> — no sales pressure, just a straight answer.
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 8. WHY WE BUILT IT (Final Close) ══════════════════════════ -->
+    <section id="origin" data-label="Why We Built It">
+      <div class="container-sm">
+        <div class="origin-inner">
+          <div class="fade-up">
+            <p class="section-label">Why We Built This</p>
+            <h2 class="origin-headline serif">Built by people who've<br><em>seen the spreadsheet fail.</em></h2>
+          </div>
+          <div class="origin-story fade-up">
+            <p>Varro Ag was built after watching a service team manage hundreds of machines across multiple spreadsheets — one per equipment type, manually updated, no alerts, no audit trail. Inspections were missed. Claims were disputed. Hours were spent every week just figuring out what was due.</p>
+            <p>There was no off-the-shelf tool built for this specific workflow — warranty tracking, hourly service intervals, annual inspections, and technician assignments all in one place. So we built it.</p>
+          </div>
+          <div class="origin-cards fade-up">
+            <div class="origin-card">
+              <div class="origin-card-icon">🎯</div>
+              <h3>Designed for one industry</h3>
+              <p>Not a generic fleet tool shoehorned into ag. Built specifically for Fendt and AGCO equipment dealers with the warranty and service workflows they actually use.</p>
+            </div>
+            <div class="origin-card">
+              <div class="origin-card-icon">📋</div>
+              <h3>No rip-and-replace</h3>
+              <p>Already tracking in Excel? Good. Bring your spreadsheet. Varro imports your existing data and takes it from there — no starting from scratch.</p>
+            </div>
+          </div>
+          <div class="origin-cta fade-up">
+            <a class="btn btn-primary" href="/app">See a Demo →</a>
+            <a class="btn btn-outline" href="#" onclick="goTo('pricing');return false;">View Pricing</a>
+            <span class="origin-fine">No sales calls. No pressure.</span>
+          </div>
+        </div>
+      </div>
+      <footer>
+        <div class="footer-inner">
+          <div class="footer-brand">
+            <div class="footer-mark">V</div>
+            <span>© 2026 Varro Ag. Built for AGCO equipment dealers.</span>
+          </div>
+          <div class="footer-links">
+            <a href="mailto:hello@varroag.com">Contact</a>
+            <a href="#" onclick="goTo('pricing');return false;">Pricing</a>
+            <a href="#" onclick="goTo('roadmap');return false;">Roadmap</a>
+          </div>
+        </div>
+      </footer>
+    </section>
+
+  </div><!-- #slides -->
+
+  <script>
+    const slideIds = ['hero','roi','process','your-voice','roadmap','workflow','pricing','origin'];
+
+    // Build dot nav
+    const slideNav = document.getElementById('slide-nav');
+    slideIds.forEach((id, i) => {
+      const sec = document.getElementById(id);
+      const btn = document.createElement('button');
+      btn.className = 's-dot' + (i === 0 ? ' active' : '');
+      btn.dataset.label = sec ? (sec.dataset.label || id) : id;
+      btn.setAttribute('aria-label', btn.dataset.label);
+      btn.addEventListener('click', () => goTo(id));
+      slideNav.appendChild(btn);
+    });
+
+    function goTo(id) {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Active dot
+    const slidesEl = document.getElementById('slides');
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting && e.intersectionRatio >= 0.5) {
+          const idx = slideIds.indexOf(e.target.id);
+          if (idx >= 0) document.querySelectorAll('.s-dot').forEach((d,i) => d.classList.toggle('active', i === idx));
+        }
+      });
+    }, { root: slidesEl, threshold: 0.5 });
+    slideIds.forEach(id => { const el = document.getElementById(id); if (el) obs.observe(el); });
+
+    // Nav scroll effect
+    const mainNav = document.getElementById('main-nav');
+    slidesEl.addEventListener('scroll', () => mainNav.classList.toggle('scrolled', slidesEl.scrollTop > 60));
+
+    // Keyboard nav
+    document.addEventListener('keydown', e => {
+      const secs = slideIds.map(id => document.getElementById(id)).filter(Boolean);
+      const cur = secs.findIndex(s => { const r = s.getBoundingClientRect(); return r.top >= -100 && r.top < window.innerHeight / 2; });
+      if (e.key === 'ArrowDown' || e.key === 'PageDown') { e.preventDefault(); const n = secs[Math.min(cur+1, secs.length-1)]; if(n) n.scrollIntoView({behavior:'smooth'}); }
+      if (e.key === 'ArrowUp'   || e.key === 'PageUp')   { e.preventDefault(); const n = secs[Math.max(cur-1, 0)];           if(n) n.scrollIntoView({behavior:'smooth'}); }
+    });
+
+    // Fade-up
+    const fadeObs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); fadeObs.unobserve(e.target); } });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.fade-up').forEach(el => fadeObs.observe(el));
+
+    // Pricing toggle
+    const annual  = { s:'$200', p:'$350', e:'Contact Us' };
+    const monthly = { s:'$250', p:'$437', e:'Contact Us' };
+    const billA   = { s:'Billed annually ($2,400/yr)', p:'Billed annually ($4,200/yr)', e:'Custom pricing · Let\'s talk' };
+    const billM   = { s:'Billed monthly', p:'Billed monthly', e:'Custom pricing · Let\'s talk' };
+    let billing = 'annual';
+
+    document.getElementById('billing-toggle').addEventListener('click', () => {
+      billing = billing === 'annual' ? 'monthly' : 'annual';
+      const p = billing === 'annual' ? annual : monthly;
+      const b = billing === 'annual' ? billA  : billM;
+      document.getElementById('p-s').textContent = p.s;
+      document.getElementById('p-p').textContent = p.p;
+      document.getElementById('p-e').textContent = p.e;
+      document.getElementById('b-s').textContent = b.s;
+      document.getElementById('b-p').textContent = b.p;
+      document.getElementById('b-e').textContent = b.e;
+      document.getElementById('billing-toggle').className = 't-switch ' + billing;
+      document.getElementById('lbl-annual').classList.toggle('active',  billing === 'annual');
+      document.getElementById('lbl-monthly').classList.toggle('active', billing === 'monthly');
+    });
+  </script>
+</body>
+</html>
