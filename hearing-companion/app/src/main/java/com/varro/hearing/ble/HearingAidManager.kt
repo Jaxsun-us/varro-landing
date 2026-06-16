@@ -56,6 +56,8 @@ class HearingAidManager(private val appContext: Context) {
 
     private var lastAddress: String? = null
     private var retries = 0
+    private val maxRetries = 5
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
 
     private fun emit(dir: LogDir, what: String, bytes: ByteArray? = null) {
         logs.tryEmit(GattLog(dir = dir, what = what, hex = bytes?.toHex() ?: ""))
@@ -63,7 +65,17 @@ class HearingAidManager(private val appContext: Context) {
 
     // ---- connection -------------------------------------------------------
     fun connect(address: String) {
+        handler.removeCallbacksAndMessages(null)
         lastAddress = address
+        retries = 0
+        lastError.value = null
+        openGatt(address, autoConnect = false)
+    }
+
+    /** Manual retry from the UI; restarts the back-off sequence. */
+    fun retry() {
+        val address = lastAddress ?: return
+        handler.removeCallbacksAndMessages(null)
         retries = 0
         lastError.value = null
         openGatt(address, autoConnect = false)
@@ -80,6 +92,8 @@ class HearingAidManager(private val appContext: Context) {
     }
 
     fun disconnect() {
+        handler.removeCallbacksAndMessages(null)
+        retries = maxRetries // stop any in-flight retry loop
         gatt?.disconnect()
         gatt?.close()
         gatt = null
@@ -97,12 +111,17 @@ class HearingAidManager(private val appContext: Context) {
                 g.close()
                 if (gatt === g) gatt = null
                 state.value = ConnectionState.DISCONNECTED
-                // status 133 is Android's generic failure; a patient autoConnect retry often works.
+                // "Busy / too many connections" (147), 133, and timeouts often clear once a
+                // Bluetooth slot frees up — back off and keep retrying with patient autoConnect.
                 val addr = lastAddress
-                if (addr != null && retries < 2) {
+                if (addr != null && retries < maxRetries) {
                     retries++
-                    emit(LogDir.EVENT, "retry $retries with autoConnect")
-                    openGatt(addr, autoConnect = true)
+                    val delayMs = 1500L * retries
+                    lastError.value = "${gattStatusText(status)} — retrying ($retries/$maxRetries)…"
+                    emit(LogDir.EVENT, "retry $retries in ${delayMs}ms")
+                    handler.postDelayed({ openGatt(addr, autoConnect = true) }, delayMs)
+                } else if (addr != null) {
+                    lastError.value = "${gattStatusText(status)} (status $status). Free a Bluetooth slot (disconnect car/earbuds) and tap Retry."
                 }
                 return
             }

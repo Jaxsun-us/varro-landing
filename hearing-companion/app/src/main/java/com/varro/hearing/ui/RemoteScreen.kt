@@ -58,6 +58,11 @@ fun RemoteScreen(vm: HearingViewModel) {
                         color = androidx.compose.ui.graphics.Color(0xFFEF4444),
                         modifier = Modifier.padding(top = 6.dp)
                     )
+                    if (state != ConnectionState.READY) {
+                        Button(onClick = { vm.aids.retry() }, modifier = Modifier.padding(top = 6.dp)) {
+                            Text("Retry connect")
+                        }
+                    }
                 }
 
                 if (state == ConnectionState.READY) {
