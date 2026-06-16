@@ -59,41 +59,121 @@ class HearingAidManager(private val appContext: Context) {
     private val maxRetries = 5
     private val handler = android.os.Handler(android.os.Looper.getMainLooper())
 
+    private var scanner: android.bluetooth.le.BluetoothLeScanner? = null
+    private var scanning = false
+    private var targetName: String? = null
+    private val scanTimeoutMs = 12000L
+    private val scanTimeout = Runnable { onScanTimeout() }
+
     private fun emit(dir: LogDir, what: String, bytes: ByteArray? = null) {
         logs.tryEmit(GattLog(dir = dir, what = what, hex = bytes?.toHex() ?: ""))
     }
 
     // ---- connection -------------------------------------------------------
-    fun connect(address: String) {
+    // Scan-then-connect, mirroring Chrome's Web Bluetooth: hearing aids rotate their
+    // BLE address, so we find the live advertisement and connect to THAT device object
+    // rather than the stored bonded address (which yields "busy"/147).
+    fun connect(address: String, name: String? = null) {
         handler.removeCallbacksAndMessages(null)
         lastAddress = address
+        targetName = name
         retries = 0
         lastError.value = null
-        openGatt(address, autoConnect = false)
+        startScan()
     }
 
-    /** Manual retry from the UI; restarts the back-off sequence. */
+    /** Manual retry from the UI; restarts the scan/back-off sequence. */
     fun retry() {
-        val address = lastAddress ?: return
+        if (lastAddress == null) return
         handler.removeCallbacksAndMessages(null)
         retries = 0
         lastError.value = null
-        openGatt(address, autoConnect = false)
+        startScan()
     }
 
-    private fun openGatt(address: String, autoConnect: Boolean) {
-        val adapter = BluetoothAdapter.getDefaultAdapter() ?: return
-        val device: BluetoothDevice = adapter.getRemoteDevice(address)
+    private fun startScan() {
+        val adapter = BluetoothAdapter.getDefaultAdapter()
+        scanner = adapter?.bluetoothLeScanner
+        if (scanner == null) {
+            lastError.value = "Bluetooth is off — turn it on and tap Retry."
+            state.value = ConnectionState.DISCONNECTED
+            return
+        }
         state.value = ConnectionState.CONNECTING
-        deviceName.value = device.name
-        // close any stale client before opening a new one
-        gatt?.close()
+        emit(LogDir.EVENT, "scanning for hearing aid…")
+        val settings = android.bluetooth.le.ScanSettings.Builder()
+            .setScanMode(android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY)
+            .build()
+        try {
+            scanner!!.startScan(null, settings, scanCallback)
+            scanning = true
+            handler.postDelayed(scanTimeout, scanTimeoutMs)
+        } catch (e: Exception) {
+            lastError.value = "Scan failed: ${e.message}"
+            state.value = ConnectionState.DISCONNECTED
+        }
+    }
+
+    private fun stopScan() {
+        handler.removeCallbacks(scanTimeout)
+        if (scanning) {
+            try { scanner?.stopScan(scanCallback) } catch (e: Exception) {}
+            scanning = false
+        }
+    }
+
+    private val scanCallback = object : android.bluetooth.le.ScanCallback() {
+        override fun onScanResult(callbackType: Int, result: android.bluetooth.le.ScanResult) {
+            val dev = result.device
+            if (matchesTarget(dev)) {
+                emit(LogDir.EVENT, "found ${safeName(dev) ?: dev.address}")
+                stopScan()
+                openGatt(dev, autoConnect = false)
+            }
+        }
+        override fun onScanFailed(errorCode: Int) {
+            scanning = false
+            lastError.value = "Scan failed (code $errorCode). Tap Retry."
+            state.value = ConnectionState.DISCONNECTED
+        }
+    }
+
+    private fun matchesTarget(dev: BluetoothDevice): Boolean {
+        val a = lastAddress
+        if (a != null && dev.address.equals(a, ignoreCase = true)) return true
+        val n = safeName(dev) ?: return false
+        val t = targetName
+        if (t != null && n.equals(t, ignoreCase = true)) return true
+        return n.contains("phonak", ignoreCase = true)
+    }
+
+    private fun safeName(dev: BluetoothDevice): String? =
+        try { dev.name } catch (e: SecurityException) { null }
+
+    private fun onScanTimeout() {
+        if (!scanning) return
+        stopScan()
+        if (retries < maxRetries) {
+            retries++
+            lastError.value = "Aid not advertising yet — retry $retries/$maxRetries…"
+            handler.postDelayed({ startScan() }, 1500L)
+        } else {
+            lastError.value = "Couldn't find the hearing aid advertising. Make sure it's on, close to the phone, and not in a call. Tap Retry."
+            state.value = ConnectionState.DISCONNECTED
+        }
+    }
+
+    private fun openGatt(device: BluetoothDevice, autoConnect: Boolean) {
+        state.value = ConnectionState.CONNECTING
+        deviceName.value = safeName(device)
+        gatt?.close() // close any stale client before opening a new one
         gatt = device.connectGatt(appContext, autoConnect, callback, BluetoothDevice.TRANSPORT_LE)
     }
 
     fun disconnect() {
         handler.removeCallbacksAndMessages(null)
         retries = maxRetries // stop any in-flight retry loop
+        stopScan()
         gatt?.disconnect()
         gatt?.close()
         gatt = null
@@ -113,15 +193,14 @@ class HearingAidManager(private val appContext: Context) {
                 state.value = ConnectionState.DISCONNECTED
                 // "Busy / too many connections" (147), 133, and timeouts often clear once a
                 // Bluetooth slot frees up — back off and keep retrying with patient autoConnect.
-                val addr = lastAddress
-                if (addr != null && retries < maxRetries) {
+                if (lastAddress != null && retries < maxRetries) {
                     retries++
                     val delayMs = 1500L * retries
                     lastError.value = "${gattStatusText(status)} — retrying ($retries/$maxRetries)…"
                     emit(LogDir.EVENT, "retry $retries in ${delayMs}ms")
-                    handler.postDelayed({ openGatt(addr, autoConnect = true) }, delayMs)
-                } else if (addr != null) {
-                    lastError.value = "${gattStatusText(status)} (status $status). Free a Bluetooth slot (disconnect car/earbuds) and tap Retry."
+                    handler.postDelayed({ startScan() }, delayMs) // re-scan for the live advert
+                } else if (lastAddress != null) {
+                    lastError.value = "${gattStatusText(status)} (status $status). Tap Retry."
                 }
                 return
             }

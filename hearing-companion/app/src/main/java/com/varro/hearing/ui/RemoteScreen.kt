@@ -78,7 +78,7 @@ fun RemoteScreen(vm: HearingViewModel) {
                     }
                     if (devices.isEmpty()) Text("Tap above after granting Bluetooth permission. Pair your aids in Android Settings first.")
                     devices.forEach { d ->
-                        OutlinedButton(onClick = { vm.connect(d.address) }, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
+                        OutlinedButton(onClick = { vm.connect(d.address, d.name) }, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
                             Text("Connect ${d.name}")
                         }
                     }

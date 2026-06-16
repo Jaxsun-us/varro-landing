@@ -45,9 +45,9 @@ class HearingViewModel(app: Application) : AndroidViewModel(app) {
         emptyList()
     }
 
-    fun connect(address: String) {
+    fun connect(address: String, name: String? = null) {
         Prefs.saveAddress(appCtx, address)
-        aids.connect(address)
+        aids.connect(address, name)
         appCtx.startService(Intent(appCtx, BleService::class.java))
     }
     fun disconnect() {
