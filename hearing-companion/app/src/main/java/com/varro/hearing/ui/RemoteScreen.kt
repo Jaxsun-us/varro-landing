@@ -35,6 +35,8 @@ fun RemoteScreen(vm: HearingViewModel) {
     val program by vm.aids.activeProgram.collectAsStateWithLifecycle()
     val battery by vm.aids.battery.collectAsStateWithLifecycle()
     val error by vm.aids.lastError.collectAsStateWithLifecycle()
+    val services by vm.aids.discovered.collectAsStateWithLifecycle()
+    val eventLog by vm.aids.events.collectAsStateWithLifecycle()
 
     Column(Modifier.padding(16.dp).verticalScroll(rememberScrollState())) {
         Text("Remote", fontSize = 24.sp, fontWeight = FontWeight.Bold)
@@ -109,6 +111,25 @@ fun RemoteScreen(vm: HearingViewModel) {
             Button(onClick = { vm.apply(HaAction.SET_PROGRAM, ((program ?: 1) - 1).coerceAtLeast(0)) }, enabled = enabled) { Text("‹ Prev") }
             Button(onClick = { vm.apply(HaAction.NEXT_PROGRAM) }, enabled = enabled) { Text("Next ›") }
             OutlinedButton(onClick = { vm.aids.listPresets() }, enabled = enabled) { Text("List") }
+        }
+
+        // ---- Diagnostics: what the aids actually expose + live event log ----
+        if (services.isNotEmpty() || eventLog.isNotEmpty()) {
+            Card(Modifier.fillMaxWidth().padding(top = 20.dp)) {
+                Column(Modifier.padding(12.dp)) {
+                    Text("Diagnostics", fontWeight = FontWeight.SemiBold)
+                    if (services.isNotEmpty()) {
+                        Text("GATT services found:", Modifier.padding(top = 6.dp), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        services.forEach { Text(it, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, fontSize = 11.sp) }
+                    }
+                    if (eventLog.isNotEmpty()) {
+                        Text("Event log:", Modifier.padding(top = 10.dp), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        eventLog.takeLast(16).forEach {
+                            Text(it, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, fontSize = 11.sp)
+                        }
+                    }
+                }
+            }
         }
     }
 }

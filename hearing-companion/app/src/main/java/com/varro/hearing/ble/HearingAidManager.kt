@@ -53,6 +53,8 @@ class HearingAidManager(private val appContext: Context) {
     val battery = MutableStateFlow<Int?>(null)       // 0..100
     val logs = MutableSharedFlow<GattLog>(extraBufferCapacity = 256)
     val lastError = MutableStateFlow<String?>(null)
+    val discovered = MutableStateFlow<List<String>>(emptyList()) // GATT services/characteristics
+    val events = MutableStateFlow<List<String>>(emptyList())      // live event log for on-screen diagnostics
 
     private var lastAddress: String? = null
     private var retries = 0
@@ -67,6 +69,9 @@ class HearingAidManager(private val appContext: Context) {
 
     private fun emit(dir: LogDir, what: String, bytes: ByteArray? = null) {
         logs.tryEmit(GattLog(dir = dir, what = what, hex = bytes?.toHex() ?: ""))
+        val tag = when (dir) { LogDir.IN -> "◀" ; LogDir.OUT -> "▶" ; LogDir.EVENT -> "•" }
+        val line = "$tag $what${bytes?.let { "  " + it.toHex() } ?: ""}"
+        events.value = (events.value + line).takeLast(80)
     }
 
     // ---- connection -------------------------------------------------------
@@ -218,9 +223,25 @@ class HearingAidManager(private val appContext: Context) {
 
         override fun onServicesDiscovered(g: BluetoothGatt, status: Int) {
             chars.clear()
-            for (svc in g.services) for (c in svc.characteristics) chars[c.uuid] = c
+            val list = mutableListOf<String>()
+            for (svc in g.services) {
+                list.add("▸ service ${svc.uuid.short()}")
+                for (c in svc.characteristics) {
+                    chars[c.uuid] = c
+                    val p = c.properties
+                    val f = buildString {
+                        if (p and BluetoothGattCharacteristic.PROPERTY_READ != 0) append("R")
+                        if (p and (BluetoothGattCharacteristic.PROPERTY_WRITE or BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) != 0) append("W")
+                        if (p and (BluetoothGattCharacteristic.PROPERTY_NOTIFY or BluetoothGattCharacteristic.PROPERTY_INDICATE) != 0) append("N")
+                    }
+                    list.add("    ${c.uuid.short()} [$f]")
+                }
+            }
+            discovered.value = list
+            val hasVcs = chars.containsKey(HaUuids.VOLUME_CONTROL_POINT)
+            val hasHas = chars.containsKey(HaUuids.HA_PRESET_CONTROL_POINT)
             state.value = ConnectionState.READY
-            emit(LogDir.EVENT, "services discovered (${chars.size} characteristics)")
+            emit(LogDir.EVENT, "discovered ${chars.size} chars · volume:${if (hasVcs) "yes" else "NO"} · programs:${if (hasHas) "yes" else "NO"}")
             // Prime readouts and subscribe to live updates.
             chars[HaUuids.VOLUME_STATE]?.let { read(it) ; subscribe(it) }
             chars[HaUuids.HA_ACTIVE_PRESET_INDEX]?.let { read(it); subscribe(it) }
@@ -290,7 +311,12 @@ class HearingAidManager(private val appContext: Context) {
     }
 
     private fun vcp(opcode: Byte, extra: ByteArray = ByteArray(0)) {
-        val cp = chars[HaUuids.VOLUME_CONTROL_POINT] ?: return
+        val cp = chars[HaUuids.VOLUME_CONTROL_POINT]
+        if (cp == null) {
+            lastError.value = "These aids don't expose the standard Volume Control (0x1844) on this connection."
+            emit(LogDir.EVENT, "no Volume Control Point (0x2b7e)")
+            return
+        }
         // Re-read state for a fresh change counter, then write.
         chars[HaUuids.VOLUME_STATE]?.let { read(it) }
         enqueue {
@@ -300,7 +326,12 @@ class HearingAidManager(private val appContext: Context) {
     }
 
     private fun preset(payload: ByteArray) {
-        val cp = chars[HaUuids.HA_PRESET_CONTROL_POINT] ?: return
+        val cp = chars[HaUuids.HA_PRESET_CONTROL_POINT]
+        if (cp == null) {
+            lastError.value = "These aids don't expose the standard Hearing Access programs (0x1854) on this connection."
+            emit(LogDir.EVENT, "no Preset Control Point (0x2bdb)")
+            return
+        }
         write(cp, payload)
     }
 
