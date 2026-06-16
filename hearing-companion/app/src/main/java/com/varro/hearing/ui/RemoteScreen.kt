@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -56,9 +57,13 @@ fun RemoteScreen(vm: HearingViewModel) {
                         Text("Disconnect")
                     }
                 } else {
-                    val devices = remember { vm.bondedDevices() }
+                    // Load lazily (after permission) so first launch never touches Bluetooth without it.
+                    var devices by remember { mutableStateOf(emptyList<BondedDevice>()) }
                     Text("Paired devices:", Modifier.padding(top = 8.dp), fontWeight = FontWeight.SemiBold)
-                    if (devices.isEmpty()) Text("None — pair your aids in Android Settings first.")
+                    OutlinedButton(onClick = { devices = vm.bondedDevices() }, modifier = Modifier.padding(top = 4.dp)) {
+                        Text("Show paired devices")
+                    }
+                    if (devices.isEmpty()) Text("Tap above after granting Bluetooth permission. Pair your aids in Android Settings first.")
                     devices.forEach { d ->
                         OutlinedButton(onClick = { vm.connect(d.address) }, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
                             Text("Connect ${d.name}")

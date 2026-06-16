@@ -36,9 +36,13 @@ class HearingViewModel(app: Application) : AndroidViewModel(app) {
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     @SuppressLint("MissingPermission")
-    fun bondedDevices(): List<BondedDevice> {
+    fun bondedDevices(): List<BondedDevice> = try {
         val adapter = BluetoothAdapter.getDefaultAdapter() ?: return emptyList()
-        return adapter.bondedDevices.orEmpty().map { BondedDevice(it.name ?: it.address, it.address) }
+        adapter.bondedDevices.orEmpty().map { BondedDevice(it.name ?: it.address, it.address) }
+    } catch (e: SecurityException) {
+        emptyList() // BLUETOOTH_CONNECT not granted yet
+    } catch (e: Exception) {
+        emptyList()
     }
 
     fun connect(address: String) {
