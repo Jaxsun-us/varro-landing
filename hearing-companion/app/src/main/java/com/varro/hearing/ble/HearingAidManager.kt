@@ -85,16 +85,22 @@ class HearingAidManager(private val appContext: Context) {
         targetName = name
         retries = 0
         lastError.value = null
-        startScan()
+        openGatt(address, autoConnect = false)
     }
 
-    /** Manual retry from the UI; restarts the scan/back-off sequence. */
+    /** Manual retry from the UI; restarts the back-off sequence. */
     fun retry() {
-        if (lastAddress == null) return
+        val a = lastAddress ?: return
         handler.removeCallbacksAndMessages(null)
         retries = 0
         lastError.value = null
-        startScan()
+        openGatt(a, autoConnect = false)
+    }
+
+    /** Connect directly to the exact bonded device the user tapped (no scan). */
+    private fun openGatt(address: String, autoConnect: Boolean) {
+        val adapter = BluetoothAdapter.getDefaultAdapter() ?: return
+        openGatt(adapter.getRemoteDevice(address), autoConnect)
     }
 
     private fun startScan() {
@@ -208,14 +214,15 @@ class HearingAidManager(private val appContext: Context) {
                 state.value = ConnectionState.DISCONNECTED
                 // "Busy / too many connections" (147), 133, and timeouts often clear once a
                 // Bluetooth slot frees up — back off and keep retrying with patient autoConnect.
-                if (lastAddress != null && retries < maxRetries) {
+                val addr = lastAddress
+                if (addr != null && retries < maxRetries) {
                     retries++
                     val delayMs = 1500L * retries
                     lastError.value = "${gattStatusText(status)} — retrying ($retries/$maxRetries)…"
                     emit(LogDir.EVENT, "retry $retries in ${delayMs}ms")
-                    handler.postDelayed({ startScan() }, delayMs) // re-scan for the live advert
-                } else if (lastAddress != null) {
-                    lastError.value = "${gattStatusText(status)} (status $status). Tap Retry."
+                    handler.postDelayed({ openGatt(addr, autoConnect = true) }, delayMs)
+                } else if (addr != null) {
+                    lastError.value = "${gattStatusText(status)} (status $status). If the aids are connected to the phone for audio, disconnect them there first, then tap Retry."
                 }
                 return
             }
