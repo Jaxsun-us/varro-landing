@@ -34,6 +34,7 @@ fun RemoteScreen(vm: HearingViewModel) {
     val muted by vm.aids.muted.collectAsStateWithLifecycle()
     val program by vm.aids.activeProgram.collectAsStateWithLifecycle()
     val battery by vm.aids.battery.collectAsStateWithLifecycle()
+    val error by vm.aids.lastError.collectAsStateWithLifecycle()
 
     Column(Modifier.padding(16.dp).verticalScroll(rememberScrollState())) {
         Text("Remote", fontSize = 24.sp, fontWeight = FontWeight.Bold)
@@ -51,6 +52,13 @@ fun RemoteScreen(vm: HearingViewModel) {
                 battery?.let { Text("Battery: $it%") }
                 program?.let { Text("Program: $it") }
                 volume?.let { Text("Volume: $it / 255${if (muted) " (muted)" else ""}") }
+                error?.let {
+                    Text(
+                        "⚠ $it",
+                        color = androidx.compose.ui.graphics.Color(0xFFEF4444),
+                        modifier = Modifier.padding(top = 6.dp)
+                    )
+                }
 
                 if (state == ConnectionState.READY) {
                     OutlinedButton(onClick = { vm.disconnect() }, modifier = Modifier.padding(top = 8.dp)) {

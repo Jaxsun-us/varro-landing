@@ -52,6 +52,10 @@ class HearingAidManager(private val appContext: Context) {
     val activeProgram = MutableStateFlow<Int?>(null)
     val battery = MutableStateFlow<Int?>(null)       // 0..100
     val logs = MutableSharedFlow<GattLog>(extraBufferCapacity = 256)
+    val lastError = MutableStateFlow<String?>(null)
+
+    private var lastAddress: String? = null
+    private var retries = 0
 
     private fun emit(dir: LogDir, what: String, bytes: ByteArray? = null) {
         logs.tryEmit(GattLog(dir = dir, what = what, hex = bytes?.toHex() ?: ""))
@@ -59,11 +63,20 @@ class HearingAidManager(private val appContext: Context) {
 
     // ---- connection -------------------------------------------------------
     fun connect(address: String) {
+        lastAddress = address
+        retries = 0
+        lastError.value = null
+        openGatt(address, autoConnect = false)
+    }
+
+    private fun openGatt(address: String, autoConnect: Boolean) {
         val adapter = BluetoothAdapter.getDefaultAdapter() ?: return
         val device: BluetoothDevice = adapter.getRemoteDevice(address)
         state.value = ConnectionState.CONNECTING
         deviceName.value = device.name
-        gatt = device.connectGatt(appContext, false, callback, BluetoothDevice.TRANSPORT_LE)
+        // close any stale client before opening a new one
+        gatt?.close()
+        gatt = device.connectGatt(appContext, autoConnect, callback, BluetoothDevice.TRANSPORT_LE)
     }
 
     fun disconnect() {
@@ -78,7 +91,24 @@ class HearingAidManager(private val appContext: Context) {
 
     private val callback = object : BluetoothGattCallback() {
         override fun onConnectionStateChange(g: BluetoothGatt, status: Int, newState: Int) {
+            if (status != BluetoothGatt.GATT_SUCCESS) {
+                emit(LogDir.EVENT, "connect failed status=$status")
+                lastError.value = "Connect failed: ${gattStatusText(status)} (status $status)"
+                g.close()
+                if (gatt === g) gatt = null
+                state.value = ConnectionState.DISCONNECTED
+                // status 133 is Android's generic failure; a patient autoConnect retry often works.
+                val addr = lastAddress
+                if (addr != null && retries < 2) {
+                    retries++
+                    emit(LogDir.EVENT, "retry $retries with autoConnect")
+                    openGatt(addr, autoConnect = true)
+                }
+                return
+            }
             if (newState == BluetoothProfile.STATE_CONNECTED) {
+                retries = 0
+                lastError.value = null
                 state.value = ConnectionState.DISCOVERING
                 emit(LogDir.EVENT, "connected")
                 g.discoverServices()
@@ -228,6 +258,18 @@ class HearingAidManager(private val appContext: Context) {
         opInFlight = false
         next()
     }
+}
+
+/** Friendly text for the common Android GATT connection status codes. */
+private fun gattStatusText(status: Int): String = when (status) {
+    8 -> "link lost / out of range (timeout)"
+    19 -> "the aid closed the connection (it refused)"
+    22 -> "phone ended the connection"
+    34 -> "connection timeout"
+    62 -> "connection failed to establish"
+    133 -> "generic GATT failure (133) — retrying"
+    147 -> "too many connections / busy"
+    else -> "error code $status"
 }
 
 private fun ByteArray.toHex(): String = joinToString(" ") { "%02x".format(it) }
