@@ -85,16 +85,16 @@ class HearingAidManager(private val appContext: Context) {
         targetName = name
         retries = 0
         lastError.value = null
-        openGatt(address, autoConnect = false)
+        startScan() // single scan for the live advert, like the browser (lets Android prompt to pair)
     }
 
-    /** Manual retry from the UI; restarts the back-off sequence. */
+    /** Manual retry from the UI — a single fresh scan, no background loop. */
     fun retry() {
-        val a = lastAddress ?: return
+        if (lastAddress == null) return
         handler.removeCallbacksAndMessages(null)
         retries = 0
         lastError.value = null
-        openGatt(a, autoConnect = false)
+        startScan()
     }
 
     /** Connect directly to the exact bonded device the user tapped (no scan). */
@@ -174,12 +174,9 @@ class HearingAidManager(private val appContext: Context) {
             openGatt(it, autoConnect = false)
             return
         }
-        if (retries < maxRetries) {
-            retries++
-            lastError.value = "Aid not advertising yet — retry $retries/$maxRetries…"
-            handler.postDelayed({ startScan() }, 1500L)
-        } else {
-            lastError.value = "Couldn't find the hearing aid advertising. Make sure it's on, close to the phone, and not in a call. Tap Retry."
+        // SAFE MODE: single attempt, no auto-retry loop. User taps Retry to scan again.
+        run {
+            lastError.value = "Couldn't find the aid advertising. Make sure it's on, close to the phone, and not in a call, then tap Retry."
             state.value = ConnectionState.DISCONNECTED
         }
     }
