@@ -64,6 +64,7 @@ class HearingAidManager(private val appContext: Context) {
     private var scanner: android.bluetooth.le.BluetoothLeScanner? = null
     private var scanning = false
     private var targetName: String? = null
+    private var candidate: BluetoothDevice? = null
     private val scanTimeoutMs = 12000L
     private val scanTimeout = Runnable { onScanTimeout() }
 
@@ -105,6 +106,7 @@ class HearingAidManager(private val appContext: Context) {
             return
         }
         state.value = ConnectionState.CONNECTING
+        candidate = null
         emit(LogDir.EVENT, "scanning for hearing aid…")
         val settings = android.bluetooth.le.ScanSettings.Builder()
             .setScanMode(android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY)
@@ -130,10 +132,22 @@ class HearingAidManager(private val appContext: Context) {
     private val scanCallback = object : android.bluetooth.le.ScanCallback() {
         override fun onScanResult(callbackType: Int, result: android.bluetooth.le.ScanResult) {
             val dev = result.device
-            if (matchesTarget(dev)) {
-                emit(LogDir.EVENT, "found ${safeName(dev) ?: dev.address}")
+            val n = safeName(dev)
+            // Exact = the device the user tapped. Connect to THAT (it carries the standard
+            // volume/program services). The "LE_…" LE-Audio adverts do not, so we skip them.
+            val exact = (targetName != null && n != null && n.equals(targetName, ignoreCase = true)) ||
+                (lastAddress != null && dev.address.equals(lastAddress, ignoreCase = true))
+            if (exact) {
+                emit(LogDir.EVENT, "found exact: ${n ?: dev.address}")
                 stopScan()
                 openGatt(dev, autoConnect = false)
+                return
+            }
+            // Fallback only: a Phonak advert that is NOT an LE-Audio ("LE_") one.
+            if (candidate == null && n != null && n.contains("phonak", ignoreCase = true) &&
+                !n.startsWith("LE_", ignoreCase = true)) {
+                candidate = dev
+                emit(LogDir.EVENT, "candidate: $n")
             }
         }
         override fun onScanFailed(errorCode: Int) {
@@ -143,21 +157,17 @@ class HearingAidManager(private val appContext: Context) {
         }
     }
 
-    private fun matchesTarget(dev: BluetoothDevice): Boolean {
-        val a = lastAddress
-        if (a != null && dev.address.equals(a, ignoreCase = true)) return true
-        val n = safeName(dev) ?: return false
-        val t = targetName
-        if (t != null && n.equals(t, ignoreCase = true)) return true
-        return n.contains("phonak", ignoreCase = true)
-    }
-
     private fun safeName(dev: BluetoothDevice): String? =
         try { dev.name } catch (e: SecurityException) { null }
 
     private fun onScanTimeout() {
         if (!scanning) return
         stopScan()
+        candidate?.let {
+            emit(LogDir.EVENT, "using fallback: ${safeName(it) ?: it.address}")
+            openGatt(it, autoConnect = false)
+            return
+        }
         if (retries < maxRetries) {
             retries++
             lastError.value = "Aid not advertising yet — retry $retries/$maxRetries…"
