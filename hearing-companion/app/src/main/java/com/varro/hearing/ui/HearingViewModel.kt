@@ -58,11 +58,10 @@ class HearingViewModel(app: Application) : AndroidViewModel(app) {
     fun connect(address: String, name: String? = null) {
         Prefs.saveAddress(appCtx, address)
         aids.connect(address, name)
-        appCtx.startService(Intent(appCtx, BleService::class.java))
+        // SAFE MODE: no foreground service — the app never holds the aids in the background.
     }
     fun disconnect() {
         aids.disconnect()
-        appCtx.stopService(Intent(appCtx, BleService::class.java))
     }
 
     // Manual controls route through ActionRunner so they land in the diary too.

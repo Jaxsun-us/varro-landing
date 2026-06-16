@@ -208,22 +208,12 @@ class HearingAidManager(private val appContext: Context) {
         override fun onConnectionStateChange(g: BluetoothGatt, status: Int, newState: Int) {
             if (status != BluetoothGatt.GATT_SUCCESS) {
                 emit(LogDir.EVENT, "connect failed status=$status")
-                lastError.value = "Connect failed: ${gattStatusText(status)} (status $status)"
+                lastError.value = "Connect failed: ${gattStatusText(status)} (status $status). Tap Retry to try once."
                 g.close()
                 if (gatt === g) gatt = null
                 state.value = ConnectionState.DISCONNECTED
-                // "Busy / too many connections" (147), 133, and timeouts often clear once a
-                // Bluetooth slot frees up — back off and keep retrying with patient autoConnect.
-                val addr = lastAddress
-                if (addr != null && retries < maxRetries) {
-                    retries++
-                    val delayMs = 1500L * retries
-                    lastError.value = "${gattStatusText(status)} — retrying ($retries/$maxRetries)…"
-                    emit(LogDir.EVENT, "retry $retries in ${delayMs}ms")
-                    handler.postDelayed({ openGatt(addr, autoConnect = true) }, delayMs)
-                } else if (addr != null) {
-                    lastError.value = "${gattStatusText(status)} (status $status). If the aids are connected to the phone for audio, disconnect them there first, then tap Retry."
-                }
+                // SAFE MODE: no automatic retries and no persistent autoConnect, so the app
+                // never keeps grabbing the aids in the background. The user re-tries manually.
                 return
             }
             if (newState == BluetoothProfile.STATE_CONNECTED) {
