@@ -28,6 +28,16 @@ class HearingViewModel(app: Application) : AndroidViewModel(app) {
     val aids get() = appCtx.aids
     val tones = ToneGenerator(viewModelScope)
 
+    // Control the aids through the connection the PHONE already has, via Android's audio
+    // system — works while the aids are a connected audio device, no GATT conflict.
+    private val audioManager = appCtx.getSystemService(android.media.AudioManager::class.java)
+    fun phoneVolumeUp() = adjustPhone(android.media.AudioManager.ADJUST_RAISE)
+    fun phoneVolumeDown() = adjustPhone(android.media.AudioManager.ADJUST_LOWER)
+    fun phoneMuteToggle() = adjustPhone(android.media.AudioManager.ADJUST_TOGGLE_MUTE)
+    private fun adjustPhone(direction: Int) = audioManager.adjustStreamVolume(
+        android.media.AudioManager.STREAM_MUSIC, direction, android.media.AudioManager.FLAG_SHOW_UI
+    )
+
     val diary = appCtx.db.diaryDao().recent()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val schedules = appCtx.db.scheduleDao().all()

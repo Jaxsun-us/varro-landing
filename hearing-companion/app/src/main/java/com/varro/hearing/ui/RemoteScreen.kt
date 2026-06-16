@@ -88,9 +88,26 @@ fun RemoteScreen(vm: HearingViewModel) {
             }
         }
 
+        // Phone-routed volume: uses Android's audio system over the connection the phone
+        // already has to the aids. Works without our own BLE connection — no 147 conflict.
+        Card(Modifier.fillMaxWidth().padding(top = 4.dp)) {
+            Column(Modifier.padding(16.dp)) {
+                Text("Phone volume", fontWeight = FontWeight.SemiBold)
+                Text(
+                    "Adjusts the aids through the phone's audio (works while they're connected to the phone).",
+                    fontSize = 12.sp, color = androidx.compose.ui.graphics.Color.Gray
+                )
+                Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = { vm.phoneVolumeDown() }) { Text("– Vol") }
+                    Button(onClick = { vm.phoneVolumeUp() }) { Text("+ Vol") }
+                    OutlinedButton(onClick = { vm.phoneMuteToggle() }) { Text("Mute") }
+                }
+            }
+        }
+
         val enabled = state == ConnectionState.READY
 
-        Text("Volume", fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 8.dp))
+        Text("Direct (GATT) volume", fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 16.dp))
         Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = { vm.apply(HaAction.VOLUME_DOWN) }, enabled = enabled) { Text("– Vol") }
             Button(onClick = { vm.apply(HaAction.VOLUME_UP) }, enabled = enabled) { Text("+ Vol") }
